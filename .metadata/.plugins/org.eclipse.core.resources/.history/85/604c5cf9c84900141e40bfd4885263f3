@@ -1,0 +1,34 @@
+package myTools;
+import java.nio.*;
+import java.util.*;
+
+/**
+ * This is a data structure class that extracts the peer list from the bencoded response
+ * from the tracker and stores it in an array list.
+ * 
+ * @author Yang J. Ren 
+ * format credited to TorrentInfo.java 
+ * @author Robert Moore II
+ */
+
+public class findPeer {
+	/**
+	 * Key used to retrieve the ip from the tracker response
+	 */
+	public final static ByteBuffer KEY_IP =ByteBuffer.wrap(new byte[]
+			{'i','p'});
+	
+	/**
+	 * Key used to retrieve the peer id
+	 */
+	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]
+			{'p','e','e','r',' ','i','d'});
+	
+	/**
+	 * Key used to retrieve the port
+	 */
+	public final static ByteBuffer KEY_PORT = ByteBuffer.wrap(new byte[]
+			{'p','o','r','t'});
+	
+	
+}

@@ -78,6 +78,8 @@ public final class Bencoder2
         return (ByteBuffer)vals[2];
     }
     
+    
+    
     /*
      ********************************************
      ************ BDECODING METHODS *************

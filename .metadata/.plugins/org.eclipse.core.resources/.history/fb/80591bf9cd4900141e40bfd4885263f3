@@ -1,0 +1,99 @@
+package myTools;
+import java.io.UnsupportedEncodingException;
+import java.nio.*;
+import java.util.*;
+
+import GivenTools.Bencoder2;
+import GivenTools.BencodingException;
+
+/**
+ * This is a data structure class that extracts the peer list from the bencoded response
+ * from the tracker and stores it in an array list.
+ * 
+ * @author Yang J. Ren 
+ * format credited to TorrentInfo.java 
+ * @author Robert Moore II
+ */
+
+public class findPeer {
+	/**
+	 * Key used to retrieve the ip from the tracker response
+	 */
+	public final static ByteBuffer KEY_IP =ByteBuffer.wrap(new byte[]
+			{'i','p'});
+	
+	/**
+	 * Key used to retrieve the peer id
+	 */
+	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]
+			{'p','e','e','r',' ','i','d'});
+	
+	/**
+	 * Key used to retrieve the port
+	 */
+	public final static ByteBuffer KEY_PORT = ByteBuffer.wrap(new byte[]
+			{'p','o','r','t'});
+	
+	/**
+	 * Key used to retrieve the peers dictionary
+	 */
+	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]
+			{'p','e','e','r','s'});
+	
+	/**
+	 * Tracker response
+	 */
+	public final byte[] tracker_response;
+	
+	/**
+	 * The base dictionary of the tracker response
+	 */
+	public final Map<ByteBuffer,Object> response_map;
+	
+	/**
+	 * The base dictionary of the tracker response
+	 */
+	public final Map<ByteBuffer,Object> peers_map;
+	
+	
+	/**
+	 * Pulls the peers from the list and returns the selected peer
+	 * @param tracker_response
+	 * @throws BencodingException
+	 */
+	public findPeer(byte[] tracker_response) throws BencodingException{
+		//Make sure the input is valid
+		if(tracker_response ==null|| tracker_response.length == 0){
+			throw new IllegalArgumentException("Tracker response must be non-null and have at least 1 byte.");
+		}
+		
+		//Assign the byte array
+		this.tracker_response = tracker_response;
+		
+		//Assign the response map
+		Map<ByteBuffer,Object> decode = (Map<ByteBuffer,Object>)Bencoder2.decode(tracker_response);
+		this.response_map = decode;
+		
+		//Try to extract the peer dictionary
+		ByteBuffer peers_bytes = Bencoder2.getInfoBytes(tracker_response);
+		Map<ByteBuffer,Object> peers_map = (Map<ByteBuffer,Object>)this.response_map.get(findPeer.KEY_PEERS);
+		
+		if (peers_map == null)
+			throw new BencodingException("Could not extract peers dictionary from tracker response.");
+		this.peers_map = peers_map;
+		
+		
+		/*ByteBuffer peers_buff = (ByteBuffer)this.response_map.get(findPeer.KEY_PEERS);
+		if(peers_buff == null)
+			throw new BencodingException("Could not retrieve peers from the tracker response.");
+		try{
+		String peers_string = new String(peers_buff.array(),"ASCII");
+		System.out.println(peers_string);
+		}
+		catch(UnsupportedEncodingException uee){
+			throw new BencodingException(uee.getLocalizedMessage());
+		}
+		*/
+	
+	}
+}

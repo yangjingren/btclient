@@ -1,0 +1,19 @@
+import java.nio.*;
+import java.util.*;
+
+
+public class findPeer {
+	public static void peer(Map map){
+		final Iterator i =map.keySet().iterator();
+		Object key = null;
+		while(i.hasNext() &&(key=i.next())!=null){
+			String peer=print((byte[])key);
+			Object val =map.get(key);
+			System.out.println(peer);
+		}
+	}
+	public static String print(byte[] bytes){
+		String peer = bytes.toString();
+		return peer;
+	}
+}
