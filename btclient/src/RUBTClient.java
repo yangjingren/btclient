@@ -83,7 +83,6 @@ public class RUBTClient {
 			        //ToolKit.print(decoded1);
 			        //System.out.println(tf.announce_url.getPath());
 			        String charset = "UTF-8";
-			        String url = "http://allods.com";
 			        String port = "6881";
 			        String peer_id = "ILDOEISPEJDMEISNDHII";
 			        String up = "0";
@@ -110,7 +109,7 @@ public class RUBTClient {
 			       // ToolKit.print(decoded1,0);
 			       //ToolKit.printMap((HashMap)decod, 0);
 			       findPeer fp = new findPeer(out.toString().getBytes());
-			      
+			       System.out.println(fp.peer_id+"\n"+fp.port+"\n"+fp.ip+"\n");
 			       //findPeer.peer((HashMap)decod);
 			        reader.close();
 			        String has = new String(toHex(tf.piece_hashes[1].array()));
