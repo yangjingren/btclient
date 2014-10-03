@@ -1,68 +1,17 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.file.*;
 
-import myTools.findPeer;
+import myTools.*;
 import GivenTools.*;
 
 public class RUBTClient {
-	//convert info_hash to hex
-	public static String toHex(byte[] bytes) {
-	    BigInteger bi = new BigInteger(1, bytes);
-	    return String.format("%0" + (bytes.length << 1) + "X", bi);
-	}
-	public static String bus(byte in[]) {
-	    byte ch = 0x00;
-	    int i = 0;
-	    if (in == null || in.length <= 0)
-	      return null;
-
-	    String pseudo[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-	        "A", "B", "C", "D", "E", "F" };
-	    StringBuffer out = new StringBuffer(in.length * 2);
-
-	    while (i < in.length) {
-	      // First check to see if we need ASCII or HEX
-	      if ((in[i] >= '0' && in[i] <= '9')
-	          || (in[i] >= 'a' && in[i] <= 'z')
-	          || (in[i] >= 'A' && in[i] <= 'Z') || in[i] == '$'
-	          || in[i] == '-' || in[i] == '_' || in[i] == '.'
-	          || in[i] == '!') {
-	        out.append((char) in[i]);
-	        i++;
-	      } else {
-	        out.append('%');
-	        ch = (byte) (in[i] & 0xF0); // Strip off high nibble
-	        ch = (byte) (ch >>> 4); // shift the bits down
-	        ch = (byte) (ch & 0x0F); // must do this is high order bit is
-	        // on!
-	        out.append(pseudo[(int) ch]); // convert the nibble to a
-	        // String Character
-	        ch = (byte) (in[i] & 0x0F); // Strip off low nibble
-	        out.append(pseudo[(int) ch]); // convert the nibble to a
-	        // String Character
-	        i++;
-	      }
-	    }
-
-	    String rslt = new String(out);
-
-	    return rslt;
-
-	  }
 	
-	public static void main(String[] args) {
+	public final static String peer_id_prefix = "YJRBT-RAND-NUM-";
+	
+	
+	public static void main(String[] args) throws MessagingException {
 		
 		//Check if the arguments are valid
 		if ( args.length < 2 || args.length > 2){
@@ -78,43 +27,26 @@ public class RUBTClient {
 				//Read torrent file into a byte array
 				tfArray = Files.readAllBytes(torrentFile);
 				try {
-					Object decoded1 = Bencoder2.decode(tfArray);
-			        TorrentInfo tf = new TorrentInfo(tfArray);
-			        //ToolKit.print(decoded1);
-			        //System.out.println(tf.announce_url.getPath());
-			        String charset = "UTF-8";
-			        String port = "6881";
-			        String peer_id = "ILDOEISPEJDMEISNDHII";
-			        String up = "0";
-			        String down = "0";
-			        String left = "287";
-			        String charset2 = "ASCII";
-			        String hast = new String (tf.info_hash.array());
-			        String query = String.format(("info_hash=%s&peer_id=%s&port=%s&uploaded=%s&downloaded=%s&left=%s"),bus(tf.info_hash.array()),URLEncoder.encode(peer_id,charset2),URLEncoder.encode(port,charset2),URLEncoder.encode(up,charset2),URLEncoder.encode(down,charset2),URLEncoder.encode(left,charset2));
+					int peer_id_postfix = Util.randInt(10000, 99999);
+					StringBuilder peer_id_buff = new StringBuilder();
+			        peer_id_buff.append(peer_id_prefix);
+			        peer_id_buff.append(peer_id_postfix);
+			        String peer_id = new String (peer_id_buff.toString());
 			        
-			        URL combined = new URL(tf.announce_url + "?"+query);
+					TorrentInfo tf = new TorrentInfo(tfArray);
+			        String tr = TrackerResponse.get(tf, peer_id);
+			        System.out.print(tr);
+					FindPeer fp = new FindPeer(tr.getBytes());
+					//System.out.println(fp.interval + "\n"+fp.peer_id+"\n"+fp.port+"\n"+fp.ip+"\n");
+					//findPeer.peer((HashMap)decod);
 			       
-			        //System.out.println(combined);
-			        URLConnection connection = combined.openConnection();
-			        connection.setRequestProperty("Accept-Charset", charset);
-			        InputStream response = connection.getInputStream();
-			        BufferedReader reader = new BufferedReader(new InputStreamReader(response));
-			        String line;
-			        StringBuilder out = new StringBuilder();
-			        while(((line =reader.readLine()))!=null){
-			        	out.append(line);
-			        }
-			        System.out.println(out.toString());
-			       Object decod = Bencoder2.decode(out.toString().getBytes());
-			       // ToolKit.print(decoded1,0);
-			       //ToolKit.printMap((HashMap)decod, 0);
-			       findPeer fp = new findPeer(out.toString().getBytes());
-			       System.out.println(fp.peer_id+"\n"+fp.port+"\n"+fp.ip+"\n");
-			       //findPeer.peer((HashMap)decod);
-			        reader.close();
-			        String has = new String(toHex(tf.piece_hashes[1].array()));
-			        //System.out.println(has);
-				} catch (BencodingException e) {
+					Socket socket = Handshake.write(tf.info_hash.array(),peer_id, fp.ip, fp.port);
+					socket = Handshake.read(tf.info_hash.array(), fp.peer_id, socket);
+			       
+					String has = new String(Util.toHex(tf.piece_hashes[0].array()));
+					//System.out.println(has);
+			        
+				} catch (BencodingException e){
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -130,6 +62,7 @@ public class RUBTClient {
 		System.out.print("Torrent_File: " + args[0] + "\n" + "File_Save_Name: " + args[1] + "\n");
 		
 		}
+		
 		//End argument check
 	}
 }

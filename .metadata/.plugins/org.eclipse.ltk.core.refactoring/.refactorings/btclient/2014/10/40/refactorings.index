@@ -1,3 +1,10 @@
 1412133352317	Move file
 1412133353528	Move folder
 1412205732922	Move compilation unit
+1412275374153	Delete element
+1412319955054	Rename type 'handShake'
+1412320046373	Rename type 'downloader'
+1412320725040	Rename type 'findPeer'
+1412321412221	Rename type 'handshake'
+1412321510633	Move compilation unit
+1412323217335	Rename type 'TrackerRequest'
