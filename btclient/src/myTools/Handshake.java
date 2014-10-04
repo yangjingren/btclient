@@ -21,28 +21,22 @@ public class Handshake{
 	 * @param port
 	 * @return
 	 */
-	public static Socket write(byte[] info_hash, String peer_id, String ip, Integer port){
+	public static void write(byte[] info_hash, String peer_id, String ip, Integer port, DataOutputStream outStream){
 	// handshake <protoLen><protocol><reserved><info_hash><peer_id>
 		Socket socket;
 		//System.out.println(port + ip);
 		try {
-			socket = new Socket(ip, port);
-			//System.out.println("Socket created.\n");
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			out.writeByte(protoLen);
-			out.write(protocol.getBytes());
-			out.write(new byte[reserved]);
-			out.write(info_hash);
-			out.write(peer_id.getBytes());
-			return socket;
+			outStream.writeByte(protoLen);
+			outStream.write(protocol.getBytes());
+			outStream.write(new byte[reserved]);
+			outStream.write(info_hash);
+			outStream.write(peer_id.getBytes());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
 		}
 	}
 	
@@ -54,21 +48,18 @@ public class Handshake{
 	 * @throws IOException 
 	 * @throws MessagingException 
 	 */
-	public static Socket read(byte[] info_hash, String peer_id, Socket socket) throws IOException, MessagingException{
-		
-		DataInputStream in = new DataInputStream(socket.getInputStream());
-		
+	public static void read(byte[] info_hash, String peer_id, DataInputStream inStream) throws IOException, MessagingException{
 		//Read the handshake response and store the result
 		int protocol_length;
 		byte[] peer_protocol = new byte[protoLen];
 		byte[] peer_reserved = new byte[reserved];
 		byte[] peer_hash = new byte[20];
 		byte[] p_id = new byte[20];
-		protocol_length = in.readByte();
-		in.readFully(peer_protocol);
-		in.readFully(peer_reserved);
-		in.readFully(peer_hash);
-		in.readFully(p_id);
+		protocol_length = inStream.readByte();
+		inStream.readFully(peer_protocol);
+		inStream.readFully(peer_reserved);
+		inStream.readFully(peer_hash);
+		inStream.readFully(p_id);
 		
 		//Check the handshake response for the correct values
 		if (protocol_length != protoLen)
@@ -79,8 +70,6 @@ public class Handshake{
 			throw new MessagingException("Different hash? Corrupt Socket Stream ? Wrong file.");
 		if (!Arrays.equals(p_id, peer_id.getBytes()))
 			throw new MessagingException("Different peer_id? Corrupt Socket Stream ? Wrong peer.");
-		
-		return socket;
 	}
 	
 }

@@ -54,7 +54,7 @@ public class ToolKit
             System.err.println("Error: Unknown type");
 
     }
-    
+
     /**
      * Prints the specified object with the provided depth.  The depth simply indicates how much to indent.
      * @param o the object to print
@@ -152,7 +152,7 @@ public class ToolKit
             print(o, depth);
         }
     }
-    
+
     /**
      * Helper method that prints out a dictionary/map.
      * @param map the dictionary/map to print.
