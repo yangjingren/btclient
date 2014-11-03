@@ -1,8 +1,5 @@
 package myTools;
 
-import java.math.BigInteger;
-import java.security.*;
-import java.util.Formatter;
 import java.util.Random;
 
 public class Util {
@@ -71,7 +68,6 @@ public class Util {
 	    }
 
 	    String rslt = new String(out);
-
 	    return rslt;
 
 	  }

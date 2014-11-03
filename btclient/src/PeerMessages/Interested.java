@@ -14,6 +14,10 @@ public class Interested {
 		outStream.writeByte(2);
 	}
 	
+	/**
+	 * Useless atm the peer wire protocol takes care of this
+	 * @param inStream
+	 */
 	public static void read(DataInputStream inStream) {
 		
 	}

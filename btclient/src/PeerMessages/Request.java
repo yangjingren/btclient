@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import myTools.FileStorage;
+
 public class Request {
 	
 	/**
@@ -29,9 +31,17 @@ public class Request {
 	 * @param index
 	 * @param begin
 	 * @param length
+	 * @param length2 
+	 * @throws InterruptedException 
 	 */
-	public static void read(DataInputStream inStream, int index, int begin,
-			int length){
-		
+	public static void read(DataInputStream inStream, int piece_length, DataOutputStream outStream) throws IOException, InterruptedException {
+		int index = inStream.readInt();
+		int begin = inStream.readInt();
+		int length = inStream.readInt();
+		if(FileStorage.progress.get(index) == true){
+				System.out.println("Sent piece: " +index);
+				//Sends the piece of the file
+				Piece.write(outStream, index, begin, piece_length, length);
+		}
 	}
 }

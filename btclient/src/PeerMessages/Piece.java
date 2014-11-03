@@ -1,17 +1,9 @@
 package PeerMessages;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
+import java.io.*;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.List;
 
-import myTools.FileStorage;
-import myTools.Util;
+import myTools.*;
 
 public class Piece {
 	
@@ -23,16 +15,16 @@ public class Piece {
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException 
 	 */
-	public static int read(DataInputStream inStream, int responseLen, byte[] piece_hash,int piece_length ) throws IOException, NoSuchAlgorithmException {
-		int block_length, index, begin,valid;
+	@SuppressWarnings("unused")
+	public static int read(DataInputStream inStream, int responseLen, byte[] piece_hash,int piece_length, int index ) throws IOException, NoSuchAlgorithmException {
+		int block_length, begin, valid;
 		block_length = responseLen - 9;
 		byte[] block = new byte[block_length];
 		
-		index = inStream.readInt();
+		
 		begin = inStream.readInt();
 		inStream.readFully(block);
-		int offset = index*piece_length;
-		valid = validate(block, piece_hash);
+		valid = validate.validator(block, piece_hash);
 		if (valid == 1){
 			FileStorage.store(index, block, piece_length);
 			return 1;
@@ -41,24 +33,29 @@ public class Piece {
 			return 0;
 		}
 	}
-	
+
 	/**
-	 * Check hash of recieved block with the original hash
-	 * @param block
-	 * @param piece_hash
-	 * @return
-	 * @throws NoSuchAlgorithmException
+	 * Writes to the output stream the piece requested
+	 * <len+9><7><index><begin><block>
+	 * @param outStream
+	 * @param index
+	 * @param begin
+	 * @param piece_length
+	 * @param length
+	 * @throws IOException
 	 */
-	public static int validate(byte[] block, byte[] piece_hash) throws NoSuchAlgorithmException{
-		int valid;
-		byte[] block_hash = new byte[20];
-		MessageDigest md = MessageDigest.getInstance("SHA-1");
-		block_hash = md.digest(block);
-		
-		if(Arrays.equals(block_hash, piece_hash))
-			valid = 1;
-		else
-			valid = 0;
-		return valid;
+	public static void write(DataOutputStream outStream, int index, int begin,
+			int piece_length, int length) throws IOException {
+		int totallength = length + 9;
+		outStream.writeInt(totallength);
+		outStream.writeByte(7);
+		outStream.writeInt(index);
+		outStream.writeInt(begin);
+		byte [] piece = new byte[length];
+		piece = FileStorage.read(index, begin, piece_length, totallength);
+		outStream.write(piece, 0, length);
+		FileStorage.up++;
 	}
+	
+	
 }

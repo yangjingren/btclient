@@ -5,7 +5,6 @@ import java.util.*;
 
 import GivenTools.Bencoder2;
 import GivenTools.BencodingException;
-import GivenTools.ToolKit;
 
 /**
  * This is a data structure class that extracts the peer list from the bencoded response
@@ -62,10 +61,13 @@ public class FindPeer {
 	 */
 	public final ArrayList<Object> peers_list;
 	
-	public final String peer_id;
-	public final Integer port;
-	public final String ip;
-	public final Integer interval;
+	
+	/**
+	 * 
+	 */
+	public final ArrayList<String> PeerIPList;
+	public final ArrayList<Integer> PeerPortList;
+	public final ArrayList<String> PeerIDList;
 	
 	/**
 	 * Pulls the peers from the list and returns the selected peer
@@ -75,10 +77,15 @@ public class FindPeer {
 	@SuppressWarnings("unchecked")
 	public FindPeer(byte[] tracker_response) throws BencodingException{
 		//Peer to check for -AZ5400-ASLV73OxS5Qs
-		String peerComparator = "-AZ5400";
+		String peerComparator = "128.6.171.131";
+		String myIp = "128.6.171.130";
+		
+		PeerIPList = new ArrayList<String>();
+		PeerPortList = new ArrayList<Integer>();
+		PeerIDList = new ArrayList<String>();
 		
 		//Make sure the input is valid
-		if(tracker_response ==null|| tracker_response.length == 0){
+		if(tracker_response == null|| tracker_response.length == 0){
 			throw new IllegalArgumentException("Tracker response must be non-null and have at least 1 byte.");
 		}
 		
@@ -92,7 +99,7 @@ public class FindPeer {
 		if(interval_buff == null)
 			throw new BencodingException("Could not retrieve interval.\n");
 		
-		this.interval= interval_buff;
+		TrackerResponse.interval = interval_buff;
 		
 		//Parse the response for the peer_list
 		this.peers_list = (ArrayList<Object>)this.response_map.get(FindPeer.KEY_PEERS);
@@ -100,40 +107,40 @@ public class FindPeer {
 		@SuppressWarnings("rawtypes")
 		Iterator i = this.peers_list.iterator();
 		Object o = null;
-		String peerId = null;
-		Integer peerPort = null;
-		String peerIp = null;
 		
 		//Loops through the peer list and assigns a valid peer to the variables
 		while(i.hasNext()&&(o=i.next())!=null){
 			Map<ByteBuffer,Object> peer_list = (Map<ByteBuffer,Object>)o;
+			ByteBuffer peer_ip = (ByteBuffer)peer_list.get(FindPeer.KEY_IP);
 			ByteBuffer peer_id = (ByteBuffer)peer_list.get(FindPeer.KEY_PEER_ID);
-			String pid;
 			String ip1;
+			String id1;
+			Integer port;
 			try {
-				pid = new String(peer_id.array(),"ASCII");
-				if (pid.startsWith(peerComparator)){
-					ByteBuffer ip = (ByteBuffer)peer_list.get(FindPeer.KEY_IP);
-					Integer port = (Integer)peer_list.get(FindPeer.KEY_PORT);
-					ip1 = new String(ip.array(),"ASCII");
-					peerIp = ip1;
-					peerPort = port;
-					peerId = pid;
-					break;
+				ip1 = new String(peer_ip.array(),"ASCII");
+				id1 = new String(peer_id.array(),"ASCII");
+				System.out.println(ip1 + id1);
+				if (ip1.startsWith(peerComparator)||ip1.startsWith(myIp)){
+					
+					port = (Integer)peer_list.get(FindPeer.KEY_PORT);
+					PeerIDList.add(id1);
+					PeerIPList.add(ip1);
+					PeerPortList.add(port);
 				}
 			} catch (UnsupportedEncodingException e) {
 				throw new BencodingException(e.getLocalizedMessage());
 			}
 			
 		//Validate if any peers are found
-		if (peerId == null)
+		/*
+			if (PeerIPList.size() == 0)
 			throw new BencodingException("Could not retrieve a valid peer.\n");
+		*/
 		}
 		
+		
 		//Assign the peer information
-		this.peer_id = peerId;
-		this.port = peerPort;
-		this.ip =peerIp;
-	
 	}
+	
+
 }

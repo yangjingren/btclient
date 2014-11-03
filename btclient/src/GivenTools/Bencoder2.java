@@ -369,7 +369,6 @@ public final class Bencoder2
      * @return a {@code byte[]} containing the bencoded form of the {@code ArrayList}.
      * @throws BencodingException if any of the objects in the list is not bencodable.
      */
-    @SuppressWarnings("unchecked")
 	private static final byte[] encodeList(ArrayList list) throws BencodingException
     {
         byte[][] list_segments = new byte[list.size()][];

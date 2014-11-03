@@ -1,10 +1,7 @@
 package myTools;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.*;
 import java.util.Arrays;
 		
 public class Handshake{
@@ -21,10 +18,8 @@ public class Handshake{
 	 * @param port
 	 * @return
 	 */
-	public static void write(byte[] info_hash, String peer_id, String ip, Integer port, DataOutputStream outStream){
+	public static void write(byte[] info_hash, String peer_id , DataOutputStream outStream){
 	// handshake <protoLen><protocol><reserved><info_hash><peer_id>
-		Socket socket;
-		//System.out.println(port + ip);
 		try {
 			outStream.writeByte(protoLen);
 			outStream.write(protocol.getBytes());
@@ -48,7 +43,7 @@ public class Handshake{
 	 * @throws IOException 
 	 * @throws MessagingException 
 	 */
-	public static void read(byte[] info_hash, String peer_id, DataInputStream inStream) throws IOException, MessagingException{
+	public static void read(byte[] info_hash, DataInputStream inStream) throws IOException, MessagingException{
 		//Read the handshake response and store the result
 		int protocol_length;
 		byte[] peer_protocol = new byte[protoLen];
@@ -68,8 +63,10 @@ public class Handshake{
 			throw new MessagingException("Different protocol? Corrupt Socket Stream.");
 		if (!Arrays.equals(peer_hash, info_hash))
 			throw new MessagingException("Different hash? Corrupt Socket Stream ? Wrong file.");
+		/*
 		if (!Arrays.equals(p_id, peer_id.getBytes()))
 			throw new MessagingException("Different peer_id? Corrupt Socket Stream ? Wrong peer.");
+			*/
 	}
 	
 }
