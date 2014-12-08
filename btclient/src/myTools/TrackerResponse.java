@@ -21,7 +21,7 @@ public class TrackerResponse implements Runnable{
 	/**
 	 * Default port to listen on range 6881-6889
 	 */
-	public final static String port = "20000";
+	public static String port = "20000";
 	
 	/**
 	 * Tracker events

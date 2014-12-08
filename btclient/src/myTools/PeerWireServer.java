@@ -64,7 +64,8 @@ public class PeerWireServer implements Runnable{
 	         DataInputStream inStream = new DataInputStream(csocket.getInputStream());
 	         Handshake.read(this.info_hash, inStream);
 	         Handshake.write(this.info_hash, this.peer_id, outStream);
-	         
+	         int choking_client = 1;
+	         int peer_interest = 0;
 	         Bitfield.write(outStream);
 	         Integer initialPos = PeerWireProtocol.haveQueue.size();
 	         // read if client is interested
@@ -88,12 +89,14 @@ public class PeerWireServer implements Runnable{
 						break;
 	 					case 2://Interested <len = 0001><id = 2>
 	 						System.out.println("Peer is interested");
-						System.out.println("Unchoking peer");
+	 						System.out.println("Unchoking peer");
+	 						peer_interest = 1;
 	 						Choke.unchoke(outStream);
 	 						//Unchoke here
 	 						break;
 	 					case 3://Uninterested <len = 0001><id = 3>
-						System.out.println("Peer not interested, Choking");
+	 						peer_interest = 0;
+	 						System.out.println("Peer not interested, Choking");
 	 						Choke.choke(outStream);
 	 						//Choke here
 	 						break;
@@ -134,6 +137,8 @@ public class PeerWireServer implements Runnable{
 	 						if(responseLen!= 13){
 	 							throw new MessagingException("Cancel message not properly formatted?Corrupt socket?");
 	 						}
+	 						else 
+	 							Cancel.read(inStream);
 	 						break;
 	 					default:
 	 						throw new MessagingException("Message not properly formatted?Corrupt socket?");

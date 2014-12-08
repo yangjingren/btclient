@@ -21,10 +21,14 @@ public class Bitfield {
 		byte[] bitfield = new byte[bitfieldSize];
 		inStream.readFully(bitfield);
 		int i = 0;
+		int j = 0;
 		//Record the pieces the other peer has
 		while (i<pieces){
-			if(getBit(bitfield, i)==1)
+			if(getBit(bitfield, i)==1){
+				j = FileStorage.count.get(i);
+				FileStorage.count.set(i, j++);
 				peerPieceList.set(i,true);
+			}
 			else
 				peerPieceList.set(i,false);
 			i++;

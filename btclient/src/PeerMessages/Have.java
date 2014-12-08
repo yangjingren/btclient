@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import myTools.FileStorage;
+
 public class Have {
 	/**
 	 * Sends peer ack of valid piece
@@ -25,6 +27,8 @@ public class Have {
 	 * @throws IOException
 	 */
 	public static void read(DataInputStream inStream) throws IOException{
-		inStream.readInt();
+		int i = inStream.readInt();
+		int j = FileStorage.count.get(i);
+		FileStorage.count.set(i, j++);
 	}
 }

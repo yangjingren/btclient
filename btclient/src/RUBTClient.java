@@ -59,6 +59,7 @@ public class RUBTClient implements Runnable{
 	 */
 	public void run(){
 		try {
+			
 			PeerWireProtocol.start(this.info_hash, this.client_id, this.ip, this.port, this.peer_id, 
 					this.piece_hashes, this.piece_length, this.file_length);
 		} catch (NoSuchAlgorithmException e) {
@@ -83,7 +84,8 @@ public class RUBTClient implements Runnable{
 	 * @throws NoSuchAlgorithmException
 	 */
 	public static void main(String[] args) throws MessagingException, NoSuchAlgorithmException {
-		Integer servPort = Integer.parseInt(TrackerResponse.port);
+		Integer servPort = ((Integer)Util.randInt(20000, 30000));//Integer.parseInt(TrackerResponse.port);
+		TrackerResponse.port = servPort.toString();
 		System.out.println("Server will be opened on port: "+ servPort);
 		//Check if the arguments are valid
 		if ( args.length < 2 || args.length > 2){
@@ -122,11 +124,12 @@ public class RUBTClient implements Runnable{
 					System.out.println("Download not Complete.");
 				while (i<fp.PeerIPList.size()){
 					synchronized(mutex){
+						
 						RUBTClient downloader = new RUBTClient(tf.info_hash.array(), peer_id, fp.PeerIPList.get(i), fp.PeerPortList.get(i), fp.PeerIDList.get(i), 
 								tf.piece_hashes, tf.piece_length, tf.file_length);
 						(new Thread(downloader)).start();
+						i++;
 					}
-					i++;
 				}
 				
 				//This portion is for downloading from the localhost for testing purposes

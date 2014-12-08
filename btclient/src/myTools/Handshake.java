@@ -26,6 +26,7 @@ public class Handshake{
 			outStream.write(new byte[reserved]);
 			outStream.write(info_hash);
 			outStream.write(peer_id.getBytes());
+			//System.out.println(protoLen + "\n" + protocol + "\n" + info_hash+ "\n" + peer_id);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -55,7 +56,8 @@ public class Handshake{
 		inStream.readFully(peer_reserved);
 		inStream.readFully(peer_hash);
 		inStream.readFully(p_id);
-		
+		//System.out.println("Protocol length: " + protocol_length + "\nPeer_protocol: " + peer_protocol +
+		//		"\nPeer reserved: " +peer_reserved + "\nPeer_hash: " + peer_hash + "\nPeer_id: " + p_id);
 		//Check the handshake response for the correct values
 		if (protocol_length != protoLen)
 			throw new MessagingException("Different protocol? Corrupt Socket Stream.");

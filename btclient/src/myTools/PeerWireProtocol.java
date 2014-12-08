@@ -10,7 +10,6 @@ import GivenTools.BencodingException;
 import PeerMessages.*;
 
 public class PeerWireProtocol {
-	
 	/**
 	 * Run once variable
 	 */
@@ -44,13 +43,14 @@ public class PeerWireProtocol {
 			ByteBuffer[] piece_hashes, Integer piece_length, Integer file_length) throws IOException, MessagingException, NoSuchAlgorithmException, BencodingException{
 		
 		ArrayList<Boolean> PeerPieceList = new ArrayList<Boolean>();
+		HashMap<Integer, Integer> downloadQueue = new HashMap<Integer,Integer>();
 		//Initiate prefix_length, msg_id, file_parameters, peer/client_parameters
 		int responseLen, responseID, valid;
-		
 		int index, begin, length, numPieces;
 		index = begin = 0;
 		length = file_length%piece_length;
 		numPieces = file_length/piece_length;	
+		Integer highestNumPieces = 0;
 		if (length > 0){
 			numPieces++;	
 		}
@@ -67,6 +67,7 @@ public class PeerWireProtocol {
 		
 		//Open the data streams and start the connection to peer
 		Socket socket = new Socket(ip, port);
+		System.out.println(ip+ "  " + port);
 		socketQueue.add(socket);
 		socket.setSoTimeout(120000);
 		System.out.println("Open outputStream");
@@ -96,6 +97,18 @@ public class PeerWireProtocol {
 					case 0://Choke <len = 0001><id = 0>
 						System.out.println("Peer choked");
 						peer_choke = 1;
+						//Send cancel messages
+						Set set = downloadQueue.entrySet();
+						Iterator i = set.iterator();
+						while (i.hasNext()){
+							Map.Entry me = (Map.Entry)i.next();
+							if ((Integer)me.getKey() == (numPieces-1)&&length != 0)
+								Cancel.write(outStream, ((Integer) me.getKey()).intValue(), 0, length);
+							else if ((Integer)me.getKey() == (numPieces-1)&&length == 0)
+								Cancel.write(outStream, ((Integer) me.getKey()).intValue(), 0, piece_length);
+							FileStorage.downloading.set(((Integer) me.getKey()).intValue(), false);
+							i.remove();
+						}
 						break;
 					case 1://Unchoked <len = 0001><id = 1>
 						System.out.println("Peer unchoked");
@@ -130,8 +143,10 @@ public class PeerWireProtocol {
 						if (valid == 1){
 							Have.write(outStream, index);
 							haveQueue.add(index);
+							downloadQueue.remove(index);
 							FileStorage.progress.set(index, true);
 							FileStorage.downloading.set(index, false);
+							FileStorage.missing.set(index, true);
 							TrackerResponse.trackerCompleted();
 						}
 						break;
@@ -155,18 +170,71 @@ public class PeerWireProtocol {
 				//Find the next piece to download
 				synchronized(mutex){
 					index = 0;
+					//////////////////////////RFA
+					/**
+					 * Make list of Pieces Left to be Downloaded
+					 * that this peer has
+					 */
+					Queue<Integer> list = new LinkedList<Integer>();
 					while (index < numPieces){
-						if (FileStorage.missing.get(index) == false&&PeerPieceList.get(index)==true){
+						if (FileStorage.missing.get(index) == false&&PeerPieceList.get(index)==true&&
+								FileStorage.downloading.get(index)==false){
+							////////////////////////
+							list.add(index);
+						}
+						index++;
+					}
+					
+					
+					/**
+					 * Cross reference the list with the FileStorage
+					 * make list of NumPieces
+					 */
+					highestNumPieces = 100;
+					Queue<Integer> rand = new LinkedList<Integer>();
+					while(list.size()!= 0){
+						if (FileStorage.count.get(list.peek())<highestNumPieces){
+							while(rand.size()!=0){
+								rand.remove();
+							}
+							highestNumPieces = FileStorage.count.get(list.peek());
+							rand.add(list.poll());
+						}
+						else if (FileStorage.count.get(list.peek())==highestNumPieces){
+							rand.add(list.poll());
+						}
+					}
+					/**
+					 * Select highest key 
+					 * Generate random number
+					 * Select index = value
+					 */
+					if (rand.size()>0){
+						int selector = Util.randInt(0, rand.size()-1);
+						for (int k = 0; k< selector; k++){
+							rand.remove();
+						}
+						index = rand.peek();
+						downloadQueue.put(index, 1);
+					}
+					/*
+					index = 0;
+					while (index < numPieces){
+						if (FileStorage.missing.get(index) == false&&PeerPieceList.get(index)==true&&
+								FileStorage.downloading.get(index)==false){
 							FileStorage.downloading.set(index, true);
-							FileStorage.missing.set(index, true);
+							////////////////////////
+							downloadQueue.put(index, 1);
 							break;
 						}
 						index++;
 					}
-					if (index == numPieces&&downloadC == 1){
+					*/
+					/////////////////////////
+					if (downloadC == 1){
 						break;
 					}
-					else if (index == numPieces&&downloadC == 0){
+					else if (downloadC == 0){
 						if (FileStorage.Update(piece_hashes, file_length, piece_length)==1){
 							System.out.println("Time of download in seconds(This Session): " + Logger.getRunTime());
 							downloadC = 1;
@@ -178,24 +246,11 @@ public class PeerWireProtocol {
 				
 				if (index == (numPieces-1) && length != 0){
 					Request.write(outStream, index, begin, length);
-					System.out.println("Request Sent for index: " + index + "   Size: " + length + "   Ip: "+ ip);
-				}
-				else if (index == numPieces&&downloadC == 1){
-					break;
-				}
-				else if (index == numPieces&&downloadC == 0){
-					if (FileStorage.Update(piece_hashes, file_length, piece_length)==1){
-						System.out.println("Time of download in seconds(This Session): " + Logger.getRunTime());
-						downloadC = 1;
-						//FileStorage.closeFile();
-						break;
-					}
-					else 
-						continue;
+					System.out.println("Request Sent for index: " + index + "   Size: " + length + "   Ip: "+ ip+ " Tid: " + Thread.currentThread().getId());
 				}
 				else{
 					Request.write(outStream, index, begin, piece_length);
-					System.out.println("Request Sent for index: " + index + "   Size: " + piece_length + "   Ip: "+ ip);
+					System.out.println("Request Sent for index: " + index + "   Size: " + piece_length + "   Ip: "+ ip+ " Tid: " + Thread.currentThread().getId());
 				}
 				
 			}
@@ -206,6 +261,12 @@ public class PeerWireProtocol {
 		outStream.close();
 		inStream.close();
 		socket.close();	
-		
+		Set set = downloadQueue.entrySet();
+		Iterator i = set.iterator();
+		while (i.hasNext()){
+			Map.Entry me = (Map.Entry)i.next();
+			FileStorage.downloading.set(((Integer) me.getKey()).intValue(), false);
+			i.remove();
+		}
 	}
 }

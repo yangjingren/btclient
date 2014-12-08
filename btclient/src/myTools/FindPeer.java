@@ -119,7 +119,6 @@ public class FindPeer {
 			try {
 				ip1 = new String(peer_ip.array(),"ASCII");
 				id1 = new String(peer_id.array(),"ASCII");
-				System.out.println(ip1 + id1);
 				if (ip1.startsWith(peerComparator)||ip1.startsWith(myIp)){
 					
 					port = (Integer)peer_list.get(FindPeer.KEY_PORT);

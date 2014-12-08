@@ -19,6 +19,8 @@ public class FileStorage {
 	
 	public static ArrayList<Boolean> missing;
 	
+	public static ArrayList<Integer> count;
+	
 	public static Integer down = 0;
 
 	public static Integer up = 0;
@@ -32,6 +34,7 @@ public class FileStorage {
 		FileStorage.progress = new ArrayList<Boolean>();
 		FileStorage.downloading = new ArrayList<Boolean>();
 		FileStorage.missing = new ArrayList<Boolean>();
+		FileStorage.count = new ArrayList<Integer>();
 		FileStorage.file = new RandomAccessFile(filename, "rw");
 		FileStorage.file.setLength(file_length);
 	}
@@ -110,16 +113,16 @@ public class FileStorage {
 			}
 			else{
 				FileStorage.file.seek(offset);
-			FileStorage.file.read(buffer, 0, (int)len);
-			if(validate.validator(buffer, piece_hashes[index].array()) == 1){
-				FileStorage.progress.add(true);
-				completed++;
-			}
-			else
-				FileStorage.progress.add(false);
+				FileStorage.file.read(buffer, 0, (int)len);
+				if(validate.validator(buffer, piece_hashes[index].array()) == 1){
+					FileStorage.progress.add(true);
+					completed++;
+				}
+				else
+					FileStorage.progress.add(false);
 			}
 			
-			
+			FileStorage.count.add(0);
 			offset = offset + piece_length;
 			index ++;
 		}
