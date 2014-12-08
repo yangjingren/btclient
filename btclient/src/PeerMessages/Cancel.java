@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class Cancel {
 	/**
-	 * Sends a request for the index piece
+	 * cancels a request for the index piece
 	 * @param outStream
 	 * @param index
 	 * @param begin
@@ -23,7 +23,7 @@ public class Cancel {
 	}
 	
 	/**
-	 * Uncokes the peer
+	 * reads a cancel
 	 * @param outStream
 	 * @throws IOException
 	 */
